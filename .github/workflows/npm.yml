@@ -1,0 +1,70 @@
+name: NPM
+
+permissions:
+  contents: read
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    name: Publish npm
+    if: ${{ startsWith(github.event.release.tag_name, 'v') && !contains(github.event.release.tag_name, 'varcon') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Download release archives
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets
+          gh release download "$TAG" --dir release-assets --pattern 'typos-*'
+          ls -la release-assets
+      - name: Stage binaries into npm packages
+        run: node npm/scripts/stage-binaries.mjs release-assets
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
+      - name: Publish platform packages
+        run: |
+          set -euo pipefail
+          for pkg in npm/typos-*/; do
+            echo "Publishing $(basename "$pkg")"
+            if ! output=$(npm publish --prefix "$pkg" --access public 2>&1); then
+              if echo "$output" | grep -q "previously published"; then
+                echo "Already published, skipping $(basename "$pkg")"
+              else
+                echo "$output"
+                exit 1
+              fi
+            else
+              echo "$output"
+            fi
+          done
+      - name: Publish meta package
+        run: |
+          set -euo pipefail
+          if ! output=$(npm publish --prefix npm/typos --access public 2>&1); then
+            if echo "$output" | grep -q "previously published"; then
+              echo "Already published, skipping @crate-ci/typos"
+            else
+              echo "$output"
+              exit 1
+            fi
+          else
+            echo "$output"
+          fi
