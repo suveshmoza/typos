@@ -1,0 +1,100 @@
+#!/usr/bin/env node
+"use strict";
+
+const { spawnSync } = require("node:child_process");
+const fs = require("node:fs");
+const path = require("node:path");
+
+const platformMap = {
+  darwin: {
+    arm64: "@crate-ci/typos-darwin-arm64",
+    x64: "@crate-ci/typos-darwin-x64",
+  },
+  linux: {
+    arm64: "@crate-ci/typos-linux-arm64",
+    x64: "@crate-ci/typos-linux-x64",
+  },
+  win32: {
+    arm64: "@crate-ci/typos-win32-arm64",
+    x64: "@crate-ci/typos-win32-x64",
+  },
+};
+
+function packageNameFor(platform = process.platform, arch = process.arch) {
+  return platformMap[platform]?.[arch] ?? null;
+}
+
+function binaryName(platform = process.platform) {
+  return platform === "win32" ? "typos.exe" : "typos";
+}
+
+function supportedPlatforms() {
+  return Object.entries(platformMap)
+    .flatMap(([platform, arches]) => Object.keys(arches).map((arch) => `${platform}/${arch}`))
+    .join(", ");
+}
+
+function resolvePackageJson(name) {
+  const id = `${name}/package.json`;
+  const attempts = [
+    () => require.resolve(id),
+    () => require.resolve(id, { paths: [process.cwd()] }),
+    () => require.resolve(id, { paths: [__dirname] }),
+  ];
+
+  for (const attempt of attempts) {
+    try {
+      return attempt();
+    } catch {
+      // try next resolution strategy
+    }
+  }
+
+  return null;
+}
+
+function getBinaryPath(platform = process.platform, arch = process.arch) {
+  const name = packageNameFor(platform, arch);
+  if (!name) {
+    throw new Error(
+      `Unsupported platform: ${platform}/${arch}. ` +
+        `@crate-ci/typos supports ${supportedPlatforms()}.`,
+    );
+  }
+
+  const packageJson = resolvePackageJson(name);
+  if (!packageJson) {
+    throw new Error(
+      `Could not find optional dependency "${name}". ` +
+        `Reinstall @crate-ci/typos, or install a pre-built binary from ` +
+        `https://github.com/crate-ci/typos/releases`,
+    );
+  }
+
+  const binaryPath = path.join(path.dirname(packageJson), binaryName(platform));
+  if (!fs.existsSync(binaryPath)) {
+    throw new Error(`Binary missing from ${name}: expected ${binaryPath}`);
+  }
+
+  return binaryPath;
+}
+
+let binaryPath;
+try {
+  binaryPath = getBinaryPath();
+} catch (error) {
+  console.error(error instanceof Error ? error.message : error);
+  process.exit(1);
+}
+
+const result = spawnSync(binaryPath, process.argv.slice(2), {
+  stdio: "inherit",
+  windowsHide: false,
+});
+
+if (result.error) {
+  console.error(result.error.message);
+  process.exit(1);
+}
+
+process.exit(result.status === null ? 1 : result.status);

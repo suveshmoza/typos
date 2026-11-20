@@ -1,0 +1,44 @@
+{
+  "name": "@crate-ci/typos",
+  "version": "1.52.2",
+  "description": "Source Code Spelling Correction",
+  "keywords": [
+    "typos",
+    "spellcheck",
+    "spelling",
+    "linter",
+    "cli"
+  ],
+  "homepage": "https://github.com/crate-ci/typos",
+  "bugs": {
+    "url": "https://github.com/crate-ci/typos/issues"
+  },
+  "license": "MIT OR Apache-2.0",
+  "author": "Ed Page <eopage@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/crate-ci/typos.git",
+    "directory": "npm/typos"
+  },
+  "bin": {
+    "typos": "bin/typos"
+  },
+  "files": [
+    "bin/"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "optionalDependencies": {
+    "@crate-ci/typos-darwin-arm64": "1.52.2",
+    "@crate-ci/typos-darwin-x64": "1.52.2",
+    "@crate-ci/typos-linux-arm64": "1.52.2",
+    "@crate-ci/typos-linux-x64": "1.52.2",
+    "@crate-ci/typos-win32-arm64": "1.52.2",
+    "@crate-ci/typos-win32-x64": "1.52.2"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

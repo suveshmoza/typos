@@ -1,0 +1,25 @@
+{
+  "name": "@crate-ci/typos-linux-arm64",
+  "version": "1.52.2",
+  "description": "The Linux ARM 64-bit binary for @crate-ci/typos",
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/crate-ci/typos.git",
+    "directory": "npm/typos-linux-arm64"
+  },
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "files": [
+    "typos"
+  ],
+  "preferUnplugged": true,
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
