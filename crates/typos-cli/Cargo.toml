@@ -17,6 +17,7 @@ rustdoc-args = ["--generate-link-to-definition"]
 
 [package.metadata.release]
 tag-prefix = ""
+pre-release-hook = ["node", "../../npm/scripts/sync-version.mjs", "{{version}}"]
 pre-release-replacements = [
   {file="../../CHANGELOG.md", search="Unreleased", replace="{{version}}", min=1},
   {file="../../CHANGELOG.md", search="\\.\\.\\.HEAD", replace="...{{tag_name}}", exactly=1},
