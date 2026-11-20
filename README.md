@@ -61,6 +61,12 @@ Or use [Pacman](https://wiki.archlinux.org/title/pacman) to install:
 $ sudo pacman -S typos
 ```
 
+Or use npm to install:
+```console
+$ npm install -D @crate-ci/typos
+$ npx typos
+```
+
 ## Getting Started
 
 Most commonly, you'll either want to see what typos are available with
